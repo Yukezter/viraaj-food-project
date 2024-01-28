@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Create Party{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form action="{{ url_for('create_party') }}" method="POST">
+  <div>
+    <label for="party-name-input">Party Name</label>
+    <input name="name" id="party-name-input" />
+  </div>
+  <div>
+    <label for="location-input">Location</label>
+    <input name="location" id="location-input" />
+  </div>
+  <div>
+    <label for="radius-input">Radius (mi)</label>
+    <input
+      name="radius"
+      type="range"
+      min="1"
+      max="50"
+      value="50"
+      id="radius-input"
+      onchange="updateSliderValue(this.value)"
+    />
+    <output id="slider-value" for="radius-input">50</output>
+  </div>
+  <button type="submit">Submit</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}

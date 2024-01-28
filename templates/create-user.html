@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Create Username{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form action="{{ url_for('create_user') }}" method="POST">
+  <div>
+    <label for="location-input">Username</label>
+    <input name="username" id="location-input" />
+  </div>
+  <button type="submit">Submit</button>
+</form>
+{% endblock %}
