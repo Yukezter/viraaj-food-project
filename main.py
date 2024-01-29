@@ -1,6 +1,3 @@
-import os
-from datetime import datetime
-from collections import UserDict
 from urllib.parse import urlencode
 import uuid
 import json
@@ -13,70 +10,27 @@ YELP_API_KEY = 'Ds2alHcCHxAgWWvd8y7j9qqQ-JEg-02RNRHeG-OcJgV8BII2RnHoWm2lYiFpGs9R
 YELP_BASE_URL = 'https://api.yelp.com/v3'
 YELP_LIMIT = 15
 
-global db_prev_update_time
-
-class Database(dict):
-  # def __init__(self, *args):
-  #   UserDict.__init__(self, args)
-  
-  def __init__(self,*arg,**kw):
-    super(Database, self).__init__(*arg, **kw)
-    global db_prev_update_time
-    db_prev_update_time = datetime.now().timestamp()
-    print('init!!!', db_prev_update_time)
-
-  def __setitem__(self, item, value):
-    print("You are changing the value of %s to %s!!", item, value)
-    global db_prev_update_time
-    db_prev_update_time = datetime.now().timestamp()
-    super(Database, self).__setitem__(item, value)
-
-  # def __init__(self, *args, **kwargs):
-  #     self.update(*args, **kwargs)
-
-  # def __getitem__(self, key):
-  #     val = dict.__getitem__(self, key)
-  #     print('GET', key)
-  #     return val
-
-  # def __setitem__(self, key, val):
-  #     print('SET', key, val)
-  #     dict.__setitem__(self, key, val)
-
-  # def __repr__(self):
-  #     dictrepr = dict.__repr__(self)
-  #     return '%s(%s)' % (type(self).__name__, dictrepr)
-      
-  # def update(self, *args, **kwargs):
-  #     print('update', args, kwargs)
-  #     for k, v in dict(*args, **kwargs).items():
-  #         self[k] = v
-
 global db
 db_file_name = 'db.json'
 
+def save_db_to_file():
+  with open(db_file_name, 'w') as db_file:
+    fcntl.flock(db_file, fcntl.LOCK_EX)
+    json.dump(db, db_file)
+    fcntl.flock(db_file, fcntl.LOCK_UN)
+    print('Saved db to local file...')
+
 try:
   with open(db_file_name, 'r') as fp:
-    db = Database(json.load(fp))
+    db = json.load(fp)
     
 except FileNotFoundError:
-  db = Database({
+  db = {
     'users': {},
     'parties': {}
-  })
+  }
 
-  with open(db_file_name, 'w') as db_file:
-    json.dump(db, db_file)
-
-def save_db_to_file():
-  global db_prev_update_time
-  last_db_sync_time = os.stat(db_file_name).st_ctime
-  if last_db_sync_time < db_prev_update_time:
-    with open(db_file_name, 'w') as db_file:
-      fcntl.flock(db_file, fcntl.LOCK_EX)
-      json.dump(db, db_file)
-      fcntl.flock(db_file, fcntl.LOCK_UN)
-      print('Saved db to local file...')
+  save_db_to_file()
 
 yelp_headers = {
     'accept': 'application/json',
@@ -114,8 +68,7 @@ app = Flask(  # Create a flask app
 # Create Party (Page)   GET  /parties/create
 # Create Party          POST /parties
 # Party (Page)          GET  /parties/{id}
-# Businesses (Page)     GET  /parties/{id}/businesses
-# Submit Businesses     POST /parties/{id}/businesses
+# Submit Choices        POST /parties/{id}
 
 cookie_name = f'{APP_NAME}_user_id'
 @app.before_request
@@ -149,7 +102,6 @@ def home_page():
   print('home page - user parties', g.user['parties'])
 
   for party_id in g.user['parties']:
-    print('party_id', party_id)
     party = db['parties'][party_id]
 
     if party is not None:
@@ -179,10 +131,7 @@ def create_user():
     'parties': []
   }
 
-  global db
-  print(db)
   db['users'][user_id] = user
-  print(db)
 
   resp = make_response(redirect(url_for(g.get('return_to', 'home_page'))))
   resp.set_cookie(cookie_name, user_id)
@@ -207,6 +156,7 @@ def create_party():
     'name': party_name,
     'location': location,
     'radius': radius,
+    'owner': g.user['id'],
     'members': {
       g.user['id']: {
         'page': 0
@@ -220,17 +170,14 @@ def create_party():
 
   return redirect(url_for('party_page', party_id=party_id))
 
-# GET '/parties/<party_id>' to get party page
+# GET '/parties/<party_id>' to get businesses page
 @app.route('/parties/<party_id>', methods=['GET'])
 def party_page(party_id):
-  party = db['parties'][party_id]
+  party = db.get('parties', {}).get(party_id)
 
-  return render_template('party.html', party=party)
-
-# GET '/parties/<party_id>/businesses' to get businesses page
-@app.route('/parties/<party_id>/businesses', methods=['GET'])
-def businesses_page(party_id):
-  party = db['parties'][party_id]
+  if party is None:
+    resp = make_response("Party not found", 400)
+    return resp
 
   yelp_params = {
     'location': party['location'],
@@ -272,58 +219,35 @@ def businesses_page(party_id):
       "url": business["url"]
     })
 
-  return render_template('businesses.html', businesses=businesses, party=party)
+  return render_template('party.html', businesses=businesses, party=party)
 
-# POST '/parties/<party_id>/businesses' to save chosen businesses
-@app.route('/parties/<party_id>/businesses', methods=['POST'])
+# POST '/parties/<party_id>' to save chosen businesses
+@app.route('/parties/<party_id>', methods=['POST'])
 def submit_businesses(party_id):
-  party = db['parties'].get(party_id)
+  party = db.get('parties', {}).get(party_id)
 
   if party is None:
     resp = make_response("Party not found", 400)
     return resp
+  
+  # The code below won't run if party does not exist
 
   party['members'][g.user.id]["page"] += 1
 
   for business_id, value in request.form.items():
     if value == 'on':
       for user_id, member in party['members'].items():
-        if member['choices'].get(business_id) is None:
+        if user_id != party['owner'] and member['choices'].get(business_id) is None:
           break
 
       party['matches'][business_id] = True
 
-  return redirect(url_for('businesses_page'))
+  return redirect(url_for('party_page'))
 
 if __name__ == "__main__":  # Makes sure this is the main process
   app.run(  # Starts the site
       host=
       '0.0.0.0',  # EStablishes the host, required for repl to detect the site
-      port=8000,  # Randomly select the port the machine hosts on.
+      port=8000,  # Select the port the machine hosts on
     debug=True
   )
-
-# Party
-# {
-#   "groups": {
-#     "123": {
-#       "id": "123",
-#       "name": "Taco Tuesday",
-#       "description": "Taco Tuesdays with friends",
-#       "location": "New York",
-#       "range": 100,
-#       "members": ["user_id1"]
-#     }
-#   }
-# }
-
-# User (Party Member)
-# {
-#   "users": {
-#     "123": {
-#       "id": "123",
-#       "name": "Jane Doe",
-#       "groups": ["group_id1", "group_id2"]
-#     }
-#   }
-# }

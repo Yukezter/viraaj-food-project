@@ -1,9 +1,28 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}{{ party.name }}{% endblock %}</h1>
+  <h1>{% block title %}{{ party['name'] }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  
+  <h2>Businesses</h2>
+  <form action="{{ url_for('submit_businesses', party_id=party['id']) }}" method="POST">
+  <ul class="businesses-list">
+   {%for business in businesses %}
+     <li>
+       <div>
+         <img src="{{ business['image_url'] }}" height="200px" width="200px"/>
+         <h3 class="business-name">
+           <a href="{{ business['url'] }}" target="_blank">{{ business['name'] }}</a>
+         </h3>
+         <label for="business-{{business['id'] }}-checkbox">Like/Dislike</label>
+         <input name="{{ business['id'] }}" id="business-{{ business['id'] }}-checkbox" type="checkbox" value="off"/>
+         <h6>{{ business['state'] }}, {{ business['city'] }}</h6>
+         <p>{{ business['rating'] }} ({{ business['review_count'] }} reviews)</p>
+       </div>
+     </li>
+   {%endfor%}
+   </ul>
+   <button type="submit">Submit</button>
+ </form>
 {% endblock %}

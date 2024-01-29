@@ -16,7 +16,7 @@
   <li>
     <div>
       <h3 class="party-name">
-        <a href="{{ url_for('businesses_page', party_id=party['id']) }}">{{ party['name'] }}</a>
+        <a href="{{ url_for('party_page', party_id=party['id']) }}">{{ party['name'] }}</a>
       </h3>
       <h6>Location {{ party['location'] }}</h6>
       <p>Radius {{ party['radius'] }}</p>
