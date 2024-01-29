@@ -99,8 +99,6 @@ def after_request(response):
 def home_page():
   parties = []
 
-  print('home page - user parties', g.user['parties'])
-
   for party_id in g.user['parties']:
     party = db['parties'][party_id]
 
