@@ -1,27 +1,54 @@
 {% extends 'base.html' %}
 
-{% block header %}
-  <h1>{% block title %}Food Deciding App{% endblock %}</h1>
-{% endblock %}
-
 {% block content %}
-{{ user.name }}
-<span>{{ user.id }}</span>
+
+<h2>Welcome @{{ user.username }}!</h2>
 
 <div>
-  <a href="{{ url_for('create_party_page') }}"><h2>Create Party</h2></a>
+  <div class="mb-3 d-flex justify-content-between align-items-center">
+    <div>
+      <h4>Parties</h4>
+    </div>
+    <a href="{{ url_for('create_party_page') }}" class="btn btn-light">
+      Create Party
+    </a>
+  </div>
+  
+  <div class="list-group">
+    {%for party in parties %}
+    <a href="{{ url_for('party_page', party_id=party['id']) }}" class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-people-fill" viewBox="0 0 16 16">
+        <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
+      </svg>
+      <div class="d-flex gap-2 w-100 justify-content-between">
+        <div>
+          <h6 class="mb-0">{{ party['name'] }}</h6>
+          <p class="mb-0 opacity-75">{{ party['location'] }}</p>
+        </div>
+        <button class="clipboard btn" data-party-url="{{ request.url_root[0:-1] + url_for('party_page', party_id=party['id']) }}">
+          <i class="bi bi-clipboard"></i>
+        </button>
+      </div>
+    </a>
+    {%endfor%}
+  </div>
 </div>
 
-{%for party in parties %}
-  <li>
-    <div>
-      <h3 class="party-name">
-        <a href="{{ url_for('party_page', party_id=party['id']) }}">{{ party['name'] }}</a>
-      </h3>
-      <h6>Location {{ party['location'] }}</h6>
-      <p>Radius {{ party['radius'] }}</p>
-    </div>
-  </li>
-{%endfor%}
+{% endblock %}
 
+{% block scripts %}
+<script>
+  const clipboardButtons = document.getElementsByClassName('clipboard');
+  for (let i = 0; i < clipboardButtons.length; i++) {
+    clipboardButtons[i].addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const text = clipboardButtons[i].getAttribute('data-party-url');
+      navigator.clipboard.writeText(text);
+
+      alert('Copied the folloing url: ' + text);
+    });
+  }
+</script>
 {% endblock %}

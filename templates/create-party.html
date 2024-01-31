@@ -1,34 +1,39 @@
 {% extends 'base.html' %}
 
-{% block header %}
-<h1>{% block title %}Create Party{% endblock %}</h1>
-{% endblock %}
-
 {% block content %}
-<form action="{{ url_for('create_party') }}" method="POST">
-  <div>
-    <label for="party-name-input">Party Name</label>
-    <input name="name" id="party-name-input" />
+<div class="col-lg-6 mx-auto">
+  <div class="mb-3 d-flex justify-content-between">
+    <h3>Create Party</h3>
   </div>
-  <div>
-    <label for="location-input">Location</label>
-    <input name="location" id="location-input" />
-  </div>
-  <div>
-    <label for="radius-input">Radius (mi)</label>
-    <input
-      name="radius"
-      type="range"
-      min="1"
-      max="50"
-      value="50"
-      id="radius-input"
-      onchange="updateSliderValue(this.value)"
-    />
-    <output id="slider-value" for="radius-input">50</output>
-  </div>
-  <button type="submit">Submit</button>
-</form>
+  <form action="{{ url_for('create_party') }}" method="POST">
+    <div class="mb-3">
+      <label for="party-name-input" class="form-label">Party Name</label>
+      <input class="form-control" name="name" id="party-name-input" aria-describedby="emailHelp" />
+      <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small> -->
+    </div>
+    <div class="mb-3">
+      <label for="location-input" class="form-label">Location</label>
+      <input class="form-control" name="location" id="location-input" />
+    </div>
+    <div class="mb-3">
+      <label for="radius-input" class="form-label">Radius (mi)</label>
+      <div class="form-control d-flex align-items-center">
+        <input
+          class="form-range flex-grow-1 me-2"
+          name="radius"
+          type="range"
+          min="1"
+          max="50"
+          value="50"
+          id="radius-input"
+          onchange="updateSliderValue(this.value)"
+        />
+        <small id="slider-value" for="radius-input">50</small>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Submit</button>
+  </form>
+</div>
 {% endblock %}
 
 {% block scripts %}

@@ -5,11 +5,16 @@
 {% endblock %}
 
 {% block content %}
-<form action="{{ url_for('create_user') }}" method="POST">
-  <div>
-    <label for="location-input">Username</label>
-    <input name="username" id="location-input" />
+<div class="col-lg-6 mx-auto">
+  <div class="mb-3 d-flex justify-content-between">
+    <h3>Create Your Username</h3>
   </div>
-  <button type="submit">Submit</button>
-</form>
+  <form action="{{ url_for('create_user', return_to=return_to) }}" method="POST">
+    <div class="mb-3">
+      <label for="location-input" class="form-label">Username</label>
+      <input class="form-control" name="username" id="location-input"/>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Submit</button>
+  </form>
+</div>
 {% endblock %}

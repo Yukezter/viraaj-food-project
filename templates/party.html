@@ -1,28 +1,89 @@
 {% extends 'base.html' %}
 
-{% block header %}
-  <h1>{% block title %}{{ party['name'] }}{% endblock %}</h1>
-{% endblock %}
-
 {% block content %}
-  <h2>Businesses</h2>
+<div class="d-flex  mb-4">
+  <div class="me-auto">
+    <h3 class="mb-0">{{ party['name'] }}</h3>
+    <small class="d-block mb-1">Created By {{ party['owner']['username'] }}</small>
+    <div class="d-flex align-items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
+        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/>
+      </svg>
+      <span>{{ party['location'] }}</span>
+    </div>
+  </div>
+  <div>
+    <button class="btn btn-primary me-md-2" type="button">View Members</button>
+    <button type="button" class="btn btn-primary me-md-2" data-bs-toggle="modal" data-bs-target="#exampleModal">
+      View Matches ({{ party['matches']|length }})
+    </button>
+  </div>
+</div>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Matches</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="list-group">
+          {% for business in party['matches'] %}
+            <div class="card mb-3" style="max-width: 540px;">
+              <div class="row g-0">
+                <div class="col-md-4">
+                  <img src="{{ business['image_url'] }}" class="img-fluid rounded-start" alt="...">
+                </div>
+                <div class="col-md-8">
+                  <div class="card-body">
+                    <a href="{{ business['url'] }}" target="_blank"><h5 class="card-title">{{ business['name'] }}</h5></a>
+                    <p class="card-text">
+                      <span class="d-block">{{ business['rating'] }} ({{ business['review_count'] }} reviews)</span>
+                      <small class="opacity-50 text-nowrap">{{ business['price'] }} · {{ business['categories'] }}</small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="mb-3">
+    <h4>Businesses</h4>
+  </div>
+  
   <form action="{{ url_for('submit_businesses', party_id=party['id']) }}" method="POST">
-  <ul class="businesses-list">
-   {%for business in businesses %}
-     <li>
-       <div>
-         <img src="{{ business['image_url'] }}" height="200px" width="200px"/>
-         <h3 class="business-name">
-           <a href="{{ business['url'] }}" target="_blank">{{ business['name'] }}</a>
-         </h3>
-         <label for="business-{{business['id'] }}-checkbox">Like/Dislike</label>
-         <input name="{{ business['id'] }}" id="business-{{ business['id'] }}-checkbox" type="checkbox" value="off"/>
-         <h6>{{ business['state'] }}, {{ business['city'] }}</h6>
-         <p>{{ business['rating'] }} ({{ business['review_count'] }} reviews)</p>
-       </div>
-     </li>
-   {%endfor%}
-   </ul>
-   <button type="submit">Submit</button>
- </form>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+      {% for business in businesses %}
+      <div class="col">
+        <div class="card h-100">
+          <img src="{{ business['image_url'] }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+          <div class="card-body d-flex flex-column">
+            <div class="flex-grow-1 mb-1">
+              <a href="{{ business['url'] }}" target="_blank"><h5 class="card-title">{{ business['name'] }}</h5></a>
+              <p class="card-text">
+                <span class="d-block">{{ business['rating'] }} ({{ business['review_count'] }} reviews)</span>
+                <small class="opacity-50 text-nowrap">{{ business['price'] }} · {{ business['categories'] }}</small>
+              </p>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="{{ business['id'] }}" id="{{business['id'] }}Checkbox">
+              <label class="form-check-label" for="{{business['id'] }}Checkbox">
+                Like/Dislike
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-light mt-5 d-block mx-auto">Submit</button>
+  </form>
+</div>
 {% endblock %}
